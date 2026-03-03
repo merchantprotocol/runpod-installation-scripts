@@ -82,12 +82,3 @@ nohup /workspace/llama.cpp/build/bin/llama-server \
   -ngl 99 \
   > /tmp/llama.log 2>&1 &
 
-echo "=== Setup complete! ==="
-echo ""
-echo "Your API endpoint is:"
-echo "https://4l4uga9zmb46l3-8000.proxy.runpod.net/v1"
-echo ""
-echo "Test it now with:"
-echo 'curl -k https://4l4uga9zmb46l3-8000.proxy.runpod.net/v1/chat/completions -H "Content-Type: application/json" -d '\''{"model":"Qwen3.5-35B-A3B-Q5_K_M","messages":[{"role":"user","content":"Say hello from Sulla!"}],"max_tokens":30}'\'''
-echo ""
-echo "Check logs anytime with: tail -f /tmp/llama.log"
