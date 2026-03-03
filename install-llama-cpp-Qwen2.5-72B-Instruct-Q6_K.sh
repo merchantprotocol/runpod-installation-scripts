@@ -1,10 +1,10 @@
 #!/bin/bash
 # =============================================================================
-# Qwen2.5-72B-Instruct-Q6_K + llama.cpp Server Setup
+# Qwen2.5-72B-Instruct-Q6_K + llama.cpp Server Setup (Idempotent)
 # =============================================================================
 #
 # Model:          Qwen2.5-72B-Instruct-Q6_K.gguf
-# Quantization:   6-bit K-quant (higher quality than Q4, best single-GPU choice)
+# Quantization:   6-bit K-quant (higher quality than Q4)
 # Backend:        llama.cpp (stable single-GPU inference, OpenAI-compatible API)
 # @see: https://huggingface.co/bartowski/Qwen2.5-72B-Instruct-GGUF
 #
@@ -22,27 +22,28 @@
 #   - Excellent reasoning and tool-use performance
 #   - Monthly cost on current RunPod: ~$490–$550
 #
-# What this script does:
-#   1. Installs dependencies and builds latest llama.cpp with CUDA
-#   2. Downloads the Qwen2.5-72B Q6_K model
-#   3. Launches the server as a persistent daemon on port 8000
-#      (starts with 16k context to survive the loading spike)
+# What this script does (idempotent):
+#   1. Installs dependencies (safe to rerun)
+#   2. Clones llama.cpp only if missing
+#   3. Builds llama.cpp only if binary is missing
+#   4. Downloads the Q6_K model only if missing
+#   5. Launches the server as a persistent daemon on port 8000
 #
 # Endpoint for all agents:
-#   https://YOUR-POD-ID-8000.proxy.runpod.net/v1
+#   https://4l4uga9zmb46l3-8000.proxy.runpod.net/v1
 #
 # Created for: RunPod RTX Pro 6000 deployment
 # Last Updated: March 2026
 # =============================================================================
 
 set -e
-echo "=== Starting full setup for Qwen2.5-72B-Instruct-Q6_K.gguf ==="
+echo "=== Starting idempotent setup for Qwen2.5-72B-Instruct-Q6_K.gguf ==="
 
-# 1. Install dependencies
+# 1. Install dependencies (safe to rerun)
 apt-get update -qq
 apt-get install -y git cmake build-essential python3 python3-pip curl
 
-# 2. Clone llama.cpp (if not already there)
+# 2. Clone llama.cpp only if it doesn't exist
 if [ ! -d "/workspace/llama.cpp" ]; then
   echo "Cloning llama.cpp..."
   git clone https://github.com/ggerganov/llama.cpp /workspace/llama.cpp
@@ -50,13 +51,15 @@ fi
 
 cd /workspace/llama.cpp
 
-# 3. Build llama.cpp with CUDA
-echo "Building llama.cpp with CUDA..."
-rm -rf build
-cmake -B build -DGGML_CUDA=ON
-cmake --build build --config Release -j
+# 3. Build only if the binary doesn't exist yet
+if [ ! -f "build/bin/llama-server" ]; then
+  echo "Building llama.cpp with CUDA..."
+  rm -rf build
+  cmake -B build -DGGML_CUDA=ON
+  cmake --build build --config Release -j
+fi
 
-# 4. Create models folder and download the exact model
+# 4. Create models folder and download the model only if missing
 mkdir -p /workspace/models
 cd /workspace/models
 
