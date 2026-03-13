@@ -29,9 +29,8 @@ if [ -d "$LLAMA_DIR" ]; then
 fi
 git clone --depth 1 https://github.com/ggml-org/llama.cpp.git "$LLAMA_DIR"
 cd "$LLAMA_DIR"
-mkdir -p build && cd build
-cmake .. -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES=native > /dev/null 2>&1
-make -j"$(nproc)" llama-server 2>&1 | tail -5
+cmake -B build -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j"$(nproc)" --target llama-server
 echo "       Build complete."
 
 # Verify binary
